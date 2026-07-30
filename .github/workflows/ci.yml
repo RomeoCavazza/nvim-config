@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+
+      - name: Check Lua syntax
+        run: |
+          mapfile -t lua_files < <(find lua -name "*.lua" | sort)
+          nix shell nixpkgs#lua5_1 -c luac -p init.lua "${lua_files[@]}"
+
+      - name: Check Lua formatting
+        run: nix shell nixpkgs#stylua -c stylua --check init.lua lua
